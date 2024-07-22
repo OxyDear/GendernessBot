@@ -1,5 +1,4 @@
 import telebot
-import sqlite3
 from telebot import types
 import config
 import random
@@ -61,7 +60,7 @@ def query_text(inline_query):
         helping = types.InlineQueryResultArticle('2', 'Helpisity', types.InputTextMessageContent(
             helpisity), thumbnail_url="https://m.media-amazon.com/images/I/61XmTyKs7sL._AC_SL1000_.jpg",
                                     thumbnail_height=1000, thumbnail_width=1000, reply_markup=markup)
-        bot.answer_inline_query(inline_query.id, [gender, helping], cache_time=60)
+        bot.answer_inline_query(inline_query.id, [gender, helping], cache_time=0)
     except Exception as e:
         print(e)
 
@@ -85,72 +84,9 @@ def query_text2(inline_query):
         helping = types.InlineQueryResultArticle('2', 'Helpisity', types.InputTextMessageContent(
             helpisity), thumbnail_url="https://m.media-amazon.com/images/I/61XmTyKs7sL._AC_SL1000_.jpg",
                                                  thumbnail_height=1000, thumbnail_width=1000, reply_markup=markup)
-        bot.answer_inline_query(inline_query.id, [gender, helping], cache_time=60)
+        bot.answer_inline_query(inline_query.id, [gender, helping], cache_time=0)
     except Exception as e:
         print(e)
-
-
-@bot.message_handler(content_types=['photo'])
-def get_photo(msg):
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("Go to User", url="t.me/BotFather"))
-    bot.reply_to(msg, "Photo", reply_markup=markup)
-
-
-@bot.message_handler(commands=['sql'])
-def sql(msg):
-    conn = sqlite3.connect('educate.sql')
-    cur = conn.cursor()
-
-    cur.execute("CREATE TABLE IF NOT EXISTS users (id int auto_increment primary key,"
-                " name varchar(50),"
-                " pass varchar(50))")
-    conn.commit()
-    cur.close()
-    conn.close()
-    bot.send_message(msg.chat.id, "Registration... Name")
-    bot.register_next_step_handler(msg, user_name)
-
-
-def user_name(msg):
-    global name
-    name = msg.text.strip()
-    bot.send_message(msg.chat.id, "Passcode")
-    bot.register_next_step_handler(msg, user_pass)
-
-
-def user_pass(msg):
-    password = msg.text.strip()
-
-    conn = sqlite3.connect('educate.sql')
-    cur = conn.cursor()
-
-    cur.execute(f"INSERT INTO users (name, pass) VALUES ('%s', '%s')" % (name, password))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("List of users", callback_data='users'))
-    bot.send_message(msg.chat.id, "Registration completed!", reply_markup=markup)
-
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback(call):
-    conn = sqlite3.connect('educate.sql')
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM users")
-    users = cur.fetchall()
-
-    info = ''
-    for el in users:
-        info += f'Name {el[1]}, Password: {el[2]}\n'
-
-    cur.close()
-    conn.close()
-
-    bot.send_message(call.message.chat.id, info)
 
 
 bot.infinity_polling()
